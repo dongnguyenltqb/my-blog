@@ -2,6 +2,8 @@
 title: Test host name with the provided certificate
 date: 2022/10/11
 description: Maybe sometime when you point a domain to a server or load balancer, you want to check if the certificate is valid for that domain.
+tag: certificate
+author: You
 ---
 
 Let assume the domain to test is `abc.com` and the current load balancer address is `https://test-dev-public-427989674.ap-northeast-1.elb.amazonaws.com`
