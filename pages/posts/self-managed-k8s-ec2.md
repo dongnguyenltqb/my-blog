@@ -1,7 +1,7 @@
 ---
 title: Self-managed K8S on EC2
 date: 2022/10/10
-description: git remote add origin git@github.com:dongnguyenltqb/my-blog.git
+description: Use Amazon Elastic Kubernetes Service for development environment is not a good choice if the customer or we have not enough credit. The workload for development environment is usually small so we can create 1,2 node to save money. This post will help you to install a single master node and 1 worker and you can absolutely add more nodes later.
 tag: k8s
 author: You
 ---
