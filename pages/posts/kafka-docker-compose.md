@@ -6,6 +6,10 @@ tag: kafka,docker-compose
 author: You
 ---
 
+#TLDR
+
+Download source from [dongnguyenltqb/kafka_2.13-3.3.1-docker-compose](https://github.com/dongnguyenltqb/kafka_2.13-3.3.1-docker-compose) and change the ip address in `configfiles/` then start `zookeeper`,`garen`, `leesin`,`temo` and `ui`.
+
 This article assume that you have basic knowledge about Kafka, and Docker Compose, for development environment, there is no strict requirement about high availability and durability, we will try to make our cluster same as production, staging environment as much as possible.
 
 Our infrastructure architecture is very simple, there is VM that run the application and the other VM that running the database, caching engine, search engine, etc…. The application will connect to Kafka using private ip address.
