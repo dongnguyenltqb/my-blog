@@ -2,9 +2,9 @@ import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
   const meta = {
-    title: 'dongnguyenltqb node',
+    title: 'Dong Nguyen',
     description: 'i noted everything that i usually forget',
-    image: 'https://assets.vercel.com/image/upload/q_auto/front/vercel/dps.png',
+    image: 'https://avatars.githubusercontent.com/u/24956385',
   }
 
   return (
