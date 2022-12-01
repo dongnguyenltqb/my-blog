@@ -30,7 +30,7 @@ We will go through these steps to create a master node.
 
 ## First you need to login to ec2 instance with sudo privilege.
 
-```
+```bash
 ~/code on ☁️  (ap-northeast-1) on ☁️
 ❯ ssh -i k8s-amz2.pem ec2-user@54.179.77.249
 Last login: Mon Nov 28 02:32:26 2022 from 12.23.34.45
@@ -50,7 +50,7 @@ root
 
 Run the bellow command.
 
-```
+```bash
 cat <<EOF | tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
@@ -101,14 +101,14 @@ This file included `runc` configuration, you can refer the official guide [here]
 
 Next, we need to install `runc`. Download the binary and install it to the `PATH`.
 
-```
+```bash
 wget https://github.com/opencontainers/runc/releases/download/v1.1.4/runc.amd64
 install -m 755 runc.amd64 /usr/local/sbin/runc
 ```
 
 We already installed `runc` so far, time to start `containerd` service.
 
-```
+```bash
 mv containerd.service /etc/systemd/system/containerd.service
 systemctl daemon-reload
 systemctl enable containerd
@@ -117,7 +117,7 @@ systemctl start containerd
 
 Verify that `containerd` is running.
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# systemctl status containerd
 ● containerd.service - containerd container runtime
    Loaded: loaded (/etc/systemd/system/containerd.service; enabled; vendor preset: disabled)
@@ -142,7 +142,7 @@ Hint: Some lines were ellipsized, use -l to show in full.
 
 Run the bellow command, it will download the cni plugin and extract to `/opt/cni/bin`, this is the directory that we used in file `config.toml` (containerd configuration file).
 
-```
+```bash
 wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
 mkdir -p /opt/cni/bin
 tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
@@ -152,7 +152,7 @@ tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
 
 Run the bellow command to download and copy binary file to `PATH`
 
-```
+```bash
 wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.25.0/crictl-v1.25.0-linux-amd64.tar.gz
 tar -xvf crictl-v1.25.0-linux-amd64.tar.gz
 mv crictl /usr/bin/crictl
@@ -160,7 +160,7 @@ mv crictl /usr/bin/crictl
 
 To verify the install process run `critil --version` and see the version in stdout.
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# crictl --version
 crictl version v1.25.0
 [root@ip-10-10-2-87 ~]#
@@ -170,7 +170,7 @@ crictl version v1.25.0
 
 Download the binary file from release page and copy them to `PATH`. Then start the `kubelet` service.
 
-```
+```bash
 RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
 ARCH="amd64"
 curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
@@ -186,7 +186,7 @@ systemctl start kubelet
 
 Verify `kubelet` agent is running.
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# systemctl status kubelet
 ● kubelet.service - kubelet: The Kubernetes Node Agent
    Loaded: loaded (/etc/systemd/system/kubelet.service; enabled; vendor preset: disabled)
@@ -206,7 +206,7 @@ Nov 27 17:10:37 ip-10-10-2-87.ap-southeast-1.compute.internal systemd[1]: Starte
 
 We already install all required component so far, now it’s time to boostrap cluster using `kubeadm`. But before that we need to install `ebtables` `socat` `tc` and `conntrack` because `kubeadmin` will require that.
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# yum install -y ebtables socat tc conntrack
 Failed to set locale, defaulting to C
 Loaded plugins: extras_suggestions, langpacks, priorities, update-motd
@@ -224,13 +224,13 @@ Complete!
 
 Then running `kubeadmin` to bootstrap cluster
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=/run/containerd/containerd.sock
 ```
 
 After 2,3 minutes depend on your network speed, you will see a successfully message.
 
-```
+```bash
 Your Kubernetes control-plane has initialized successfully!
 
 To start using your cluster, you need to run the following as a regular user:
@@ -255,7 +255,7 @@ kubeadm join 10.10.2.87:6443 --token uns0xr.vebipp2dubw65fby \
 
 To verify our cluster status, first we need to export `KUBECONFIG`then run `kubectl version`
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# export KUBECONFIG=/etc/kubernetes/admin.conf
 [root@ip-10-10-2-87 ~]# kubectl version -o yaml
 clientVersion:
@@ -285,7 +285,7 @@ serverVersion:
 
 We can also see that some k8s component that are running by using command `crictl ps`
 
-```
+```bash
 [root@ip-10-10-2-87 ec2-user]# crictl ps
 CONTAINER           IMAGE               CREATED             STATE               NAME                      ATTEMPT             POD ID              POD
 0c665265ebc5d       5185b96f0becf       6 minutes ago       Running             coredns                   1                   7a53c1d8d11ce       coredns-565d847f94-m476x
@@ -307,7 +307,7 @@ Default, the pod can not run on the master so we need to taint the node label so
 
 [Taints and TolerationsNode affinity is a property of Pods that attracts them to a set of nodes (either as a preference or a hard…kubernetes.io](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 node/ip-10-10-2-87.ap-southeast-1.compute.internal untainted
 [root@ip-10-10-2-87 ~]#
@@ -317,7 +317,7 @@ node/ip-10-10-2-87.ap-southeast-1.compute.internal untainted
 
 ![img](https://miro.medium.com/max/410/0*4amuL-aBoZpmNxvX.png)
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 namespace/kube-flannel created
 clusterrole.rbac.authorization.k8s.io/flannel created
@@ -330,14 +330,14 @@ daemonset.apps/kube-flannel-ds created
 
 Then let running a `nginx` pod
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubectl run nginx --image=nginx
 pod/nginx created
 ```
 
 Get the logs from pod
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubectl logs -f pods/nginx
 /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
 /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
@@ -359,7 +359,7 @@ Get the logs from pod
 
 Then kill it
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubectl delete pods/nginx
 pod "nginx" deleted
 [root@ip-10-10-2-87 ~]#
@@ -387,7 +387,7 @@ Add this security group to `master node`
 
 After you install all the necessary component, we need to copy the `KUBECONFIG`from master node to worker node, you can do it by using `scp` command or just open then copy/paste file content. Then export the `KUBECONFIG` variable so the `kubectl` can look at the config and know where is the address to connect.
 
-```
+```bash
 root@ip-10-10-2-146 ~]# mkdir -p /etc/kubernetes
 [root@ip-10-10-2-146 ~]# echo <<EOF > /etc/kubernetes/admin.conf
 > apiVersion: v1
@@ -415,14 +415,14 @@ root@ip-10-10-2-146 ~]# mkdir -p /etc/kubernetes
 
 Export the `KUBECONFIG` variable
 
-```
+```bash
 [root@ip-10-10-2-146 ~]# export KUBECONFIG=/etc/kubernetes/admin.conf
 [root@ip-10-10-2-146 ~]#
 ```
 
 Now on the `master node` , we will create a token for our worker node.
 
-```
+```bash
 [root@ip-10-10-2-87 ~]# kubeadm token create --print-join-command
 kubeadm join 10.10.2.87:6443 --token as509x.u508rekxws1i65a9 --discovery-token-ca-cert-hash sha256:9606c9e00e045034c8462c0ed8f64d1994e9b91413cbe1786d88bc74852a3794
 [root@ip-10-10-2-87 ~]#
@@ -430,7 +430,7 @@ kubeadm join 10.10.2.87:6443 --token as509x.u508rekxws1i65a9 --discovery-token-c
 
 Then go to worker node and run this command from stdout above, then wait about 1,2 minute then you will see the successfully message.
 
-```
+```bash
 [root@ip-10-10-2-146 ~]# kubeadm join 10.10.2.87:6443 --token as509x.u508rekxws1i65a9 --discovery-token-ca-cert-hash sha256:9606c9e00e045034c8462c0ed8f64d1994e9b91413cbe1786d88bc74852a3794
 [preflight] Running pre-flight checks
 [preflight] Reading configuration from the cluster...
@@ -451,7 +451,7 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 
 Now on the `master node` you can use `kubectl get nodes` to get all node in current cluster.
 
-```
+```bash
 [root@ip-10-10-2-87 ec2-user]# kubectl get nodes
 NAME                                             STATUS   ROLES           AGE   VERSION
 ip-10-10-2-146.ap-southeast-1.compute.internal   Ready    <none>          66s   v1.25.4
@@ -461,7 +461,7 @@ ip-10-10-2-87.ap-southeast-1.compute.internal    Ready    control-plane   20h   
 
 Do the same thing on `worker node`
 
-```
+```bash
 [root@ip-10-10-2-146 ~]# kubectl get nodes
 NAME                                             STATUS   ROLES           AGE     VERSION
 ip-10-10-2-146.ap-southeast-1.compute.internal   Ready    <none>          3m17s   v1.25.4
@@ -471,7 +471,7 @@ ip-10-10-2-87.ap-southeast-1.compute.internal    Ready    control-plane   20h   
 
 To know which pod is running on this `worker node`, on `worker node`you can use `crictl ps`
 
-```
+```bash
 [root@ip-10-10-2-146 ~]# crictl ps
 CONTAINER           IMAGE               CREATED             STATE               NAME                ATTEMPT             POD ID              POD
 44f5a8a0cf11d       d66192101c64f       5 minutes ago       Running             kube-flannel        0                   8b14967ce00e4       kube-flannel-ds-4l65g
@@ -481,7 +481,7 @@ CONTAINER           IMAGE               CREATED             STATE               
 
 Try to running some pod, you will see the pod that was allocated on this worker node.
 
-```
+```bash
 [root@ip-10-10-2-146 ~]# kubectl run nginx1 --image=nginx
 pod/nginx1 created
 [root@ip-10-10-2-146 ~]# kubectl run nginx2 --image=nginx
